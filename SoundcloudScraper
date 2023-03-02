@@ -1,0 +1,77 @@
+# Import the necessary libraries
+import requests
+from bs4 import BeautifulSoup
+import re
+import pandas as pd
+from flask import Flask, render_template, request, jsonify
+
+# Initialize the Flask app
+app = Flask(__name__)
+
+# Define the home page
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+# Define the scraper route
+@app.route('/scrape', methods=['POST'])
+def scrape():
+    # Get the search query from the form
+    query = request.form['query']
+
+    # Define the Soundcloud URL
+    base_url = 'https://soundcloud.com/'
+
+    # Check if the query is a profile URL
+    if 'soundcloud.com/' in query:
+        # Make an HTTP request to the profile URL and extract the HTML content
+        response = requests.get(query)
+        html = response.content
+
+        # Parse the HTML content using BeautifulSoup and extract the profile data
+        soup = BeautifulSoup(html, 'html.parser')
+        followers = soup.find('span', {'class': 'infoStats__value', 'aria-label': 'Followers'}).text
+        likes = soup.find('span', {'class': 'sc-ministats-likes__value', 'title': 'Likes'}).text
+
+        # Create a dictionary of the scraped data and return it as JSON
+        data = {'followers': followers, 'likes': likes}
+        return jsonify(data)
+
+    # Check if the query is a hashtag
+    elif query.startswith('#'):
+        # Make an HTTP request to the search URL and extract the HTML content
+        search_url = f'{base_url}search?q={query}'
+        response = requests.get(search_url)
+        html = response.content
+
+        # Parse the HTML content using BeautifulSoup and extract the hashtag data
+        soup = BeautifulSoup(html, 'html.parser')
+        followers = soup.find('span', {'class': 'infoStats__value', 'aria-label': 'Followers'}).text
+        likes = soup.find('span', {'class': 'sc-ministats-likes__value', 'title': 'Likes'}).text
+
+        # Create a dictionary of the scraped data and return it as JSON
+        data = {'followers': followers, 'likes': likes}
+        return jsonify(data)
+
+    # Check if the query is a song URL
+    elif 'soundcloud.com/' in query and '/track/' in query:
+        # Make an HTTP request to the song URL and extract the HTML content
+        response = requests.get(query)
+        html = response.content
+
+        # Parse the HTML content using BeautifulSoup and extract the song data
+        soup = BeautifulSoup(html, 'html.parser')
+        likes = soup.find('div', {'class': 'sc-ministats-item sc-ministats-likes'}).find('span', {'class': 'sc-ministats-value'}).text
+        comments = soup.find('div', {'class': 'sc-ministats-item sc-ministats-comments'}).find('span', {'class': 'sc-ministats-value'}).text
+
+        # Create a dictionary of the scraped data and return it as JSON
+        data = {'likes': likes, 'comments': comments}
+        return jsonify(data)
+
+    # Return an error message if the query is invalid
+    else:
+        return jsonify({'error': 'Invalid query'})
+
+# Run the Flask app
+if __name__ == '__main__':
+    app.run()
