@@ -31,27 +31,60 @@ def scrape():
         # Scrape the profile data using the SoundcloudScraper object
         profile_data = scraper.scrape_profile(query)
 
-        # Create a dictionary of the scraped data and return it as JSON
-        data = {'followers': profile_data['followers'], 'likes': profile_data['likes']}
-        return jsonify(data)
+        # Create a DataFrame of the scraped data
+        df = pd.DataFrame({
+            'Name': [profile_data['name']],
+            'Number of Followers': [profile_data['followers']],
+            'Email': [profile_data['email']],
+            'Phone number': [profile_data['phone']],
+            'Location': [profile_data['location']]
+        })
+
+        # Export the data to an Excel file
+        df.to_excel('scraped_data.xlsx', index=False)
+
+        # Return success message
+        return jsonify({'success': 'Data scraped and exported to Excel file.'})
 
     # Check if the query is a hashtag
     elif query.startswith('#'):
         # Scrape the hashtag data using the SoundcloudScraper object
         hashtag_data = scraper.scrape_hashtag(query)
 
-        # Create a dictionary of the scraped data and return it as JSON
-        data = {'followers': hashtag_data['followers'], 'likes': hashtag_data['likes']}
-        return jsonify(data)
+        # Create a DataFrame of the scraped data
+        df = pd.DataFrame({
+            'Name': [hashtag_data['name']],
+            'Number of Followers': [hashtag_data['followers']],
+            'Email': [''],
+            'Phone number': [''],
+            'Location': ['']
+        })
+
+        # Export the data to an Excel file
+        df.to_excel('scraped_data.xlsx', index=False)
+
+        # Return success message
+        return jsonify({'success': 'Data scraped and exported to Excel file.'})
 
     # Check if the query is a song URL
     elif 'soundcloud.com/' in query and '/track/' in query:
         # Scrape the song data using the SoundcloudScraper object
         song_data = scraper.scrape_song(query)
 
-        # Create a dictionary of the scraped data and return it as JSON
-        data = {'likes': song_data['likes'], 'comments': song_data['comments']}
-        return jsonify(data)
+        # Create a DataFrame of the scraped data
+        df = pd.DataFrame({
+            'Name': [song_data['title']],
+            'Number of Followers': [song_data['artist_followers']],
+            'Email': [''],
+            'Phone number': [''],
+            'Location': [song_data['location']]
+        })
+
+        # Export the data to an Excel file
+        df.to_excel('scraped_data.xlsx', index=False)
+
+        # Return success message
+        return jsonify({'success': 'Data scraped and exported to Excel file.'})
 
     # Return an error message if the query is invalid
     else:
@@ -59,4 +92,4 @@ def scrape():
 
 # Run the Flask app
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
